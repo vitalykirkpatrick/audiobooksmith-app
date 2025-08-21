@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  audiobooksmith:
+    build: .
+    container_name: audiobooksmith-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_APP=src/main.py
+    volumes:
+      - ./uploads:/tmp/audible_uploads
+      - ./analysis:/tmp/audible_analysis
+      - ./logs:/var/log/audiobooksmith
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - audiobooksmith-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: audiobooksmith-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - audiobooksmith
+    networks:
+      - audiobooksmith-network
+
+networks:
+  audiobooksmith-network:
+    driver: bridge
+
+volumes:
+  uploads:
+  analysis:
+  logs:
+
