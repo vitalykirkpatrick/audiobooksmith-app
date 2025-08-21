@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AudiobookSmith - Audible Book Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        input[type="text"],
+        input[type="email"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        input[type="text"]:focus,
+        input[type="email"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .file-label {
+            display: block;
+            padding: 20px;
+            border: 2px dashed #667eea;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+        
+        .file-label:hover {
+            background: #e8ebff;
+            border-color: #5a67d8;
+        }
+        
+        .file-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .file-text {
+            color: #667eea;
+            font-weight: 600;
+        }
+        
+        .file-subtext {
+            color: #999;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .analyze-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .analyze-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error-message {
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            .logo {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">📚 AudiobookSmith</div>
+            <div class="subtitle">Comprehensive Audible Book Analysis</div>
+        </div>
+        
+        <form id="uploadForm" action="/upload" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" name="fullName" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="bookFile">Upload Your Book File</label>
+                <div class="file-upload">
+                    <input type="file" id="bookFile" name="bookFile" class="file-input" accept=".txt,.pdf,.epub,.mobi,.azw,.azw3" required>
+                    <label for="bookFile" class="file-label">
+                        <div class="file-icon">📁</div>
+                        <div class="file-text">Click to select your book file</div>
+                        <div class="file-subtext">Supports: TXT, PDF, EPUB, MOBI, AZW, AZW3</div>
+                    </label>
+                </div>
+            </div>
+            
+            <button type="submit" class="analyze-btn" id="analyzeBtn">
+                🔍 Analyze Book
+            </button>
+            
+            <div class="error-message" id="errorMessage"></div>
+            
+            <div class="loading" id="loadingDiv">
+                <div class="spinner"></div>
+                <div>Analyzing your book... Please wait.</div>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        document.getElementById('bookFile').addEventListener('change', function(e) {
+            const fileName = e.target.files[0]?.name;
+            const fileLabel = document.querySelector('.file-text');
+            if (fileName) {
+                fileLabel.textContent = `Selected: ${fileName}`;
+            } else {
+                fileLabel.textContent = 'Click to select your book file';
+            }
+        });
+        
+        document.getElementById('uploadForm').addEventListener('submit', function(e) {
+            const submitBtn = document.getElementById('analyzeBtn');
+            const loadingDiv = document.getElementById('loadingDiv');
+            const errorDiv = document.getElementById('errorMessage');
+            
+            // Hide error message
+            errorDiv.style.display = 'none';
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Analyzing...';
+            loadingDiv.style.display = 'block';
+            
+            // Validate form
+            const fullName = document.getElementById('fullName').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const bookFile = document.getElementById('bookFile').files[0];
+            
+            if (!fullName || !email || !bookFile) {
+                e.preventDefault();
+                showError('Please fill in all fields and select a file.');
+                resetForm();
+                return;
+            }
+            
+            // Form will submit normally
+        });
+        
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+        }
+        
+        function resetForm() {
+            const submitBtn = document.getElementById('analyzeBtn');
+            const loadingDiv = document.getElementById('loadingDiv');
+            
+            submitBtn.disabled = false;
+            submitBtn.textContent = '🔍 Analyze Book';
+            loadingDiv.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
+
